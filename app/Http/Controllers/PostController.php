@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -13,15 +15,17 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = DB::table('posts')
-                    ->select('id', 'title', 'content', 'created_at')
-                    ->where('active', true)
-                    ->get();
-    
+        if (!Auth::check())
+        {
+            return redirect('login');
+        }
+        $posts = Post::active()->get();
+        
         $view_data = [
             'posts' => $posts
         ];
         return view('posts.index', $view_data);
+        
     }
 
     /**
@@ -29,6 +33,10 @@ class PostController extends Controller
      */
     public function create()
     {
+        if (!Auth::check())
+        {
+            return redirect('login');
+        }
         return view('posts.tambah');
     }
 
@@ -37,15 +45,17 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
+        if (!Auth::check())
+        {
+            return redirect('login');
+        }
         $title      = $request->input('title');
         $content    = $request->input('content');
         $date       = date('Y-m-d H:i:s');
 
-        DB::table('posts')->insert([
+        Post::create([
             'content' => $content,
-            'title' => $title,
-            'created_at' => $date,
-            'updated_at' => $date,
+            'title' => $title,  
         ]);
 
         return redirect('posts');
@@ -56,11 +66,12 @@ class PostController extends Controller
      */
     public function show(string $id)
     {
-        $post = DB::table('posts')
-            ->select('id', 'title', 'content', 'created_at')
-            ->where('id', '=', $id)
-            ->first();
-
+        if (!Auth::check())
+        {
+            return redirect('login');
+        }
+        $post = Post::where('id', $id)->first();
+        
         $view_data = [
             'post' => $post
         ];
@@ -72,10 +83,11 @@ class PostController extends Controller
      */
     public function edit(string $id)
     {
-        $post = DB::table('posts')
-            ->select('id', 'title', 'content', 'created_at')
-            ->where('id', '=', $id)
-            ->first();
+        if (!Auth::check())
+        {
+            return redirect('login');
+        }
+        $post = Post::where('id', $id)->first();
 
         $view_data = [
             'post' => $post
@@ -89,11 +101,14 @@ class PostController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        if (!Auth::check())
+        {
+            return redirect('login');
+        }
         $title      = $request->input('title');
         $content    = $request->input('content');
 
-        DB::table('posts')
-            ->where('id', $id)
+            Post::where('id', $id)
             ->update([
                 'title' => $title,
                 'content' => $content,
@@ -108,8 +123,11 @@ class PostController extends Controller
      */
     public function destroy(string $id)
     {
-        DB::table('posts')
-            ->where('id', $id)
+        if (!Auth::check())
+        {
+            return redirect('login');
+        }
+        Post::where('id', $id)
             ->delete();
 
         return redirect('posts');
